@@ -1,0 +1,33 @@
+- Each seat has a bill
+- all bills for a table must be prepared together and printed at the same time
+- Not necessary to have mapping of orders
+- no tax
+UI print all buttons that includes:\
+1. all items
+2. price
+3. total
+**tidy format
+save orders at the table
+
+Use case Description
+Title: Preparing bills
+
+precondition: seat activated when Atleast one item ordered for a seat
+              Create bills button selected
+Main Flow:
+1.   Seat activated = Create bill for table and section for selected seat with ordered items
+2.   Constantly update total price
+3.
+
+Alternative Flows:
+1. If not ordered item on selected seat create bills will not work
+
+PostConditions:
+1. Print all button in tidy format
+2. Save orders to a bill register(log)
+
+
+
+
+
+
