@@ -14,7 +14,7 @@ import tkinter as tk
 from abc import ABC
 
 from constants import *
-from controller import RestaurantController
+from controller import RestaurantController, BillingController
 from model import Restaurant
 
 
@@ -80,10 +80,21 @@ class ServerView(RestaurantView):
 
             self.canvas.tag_bind(seat_id, '<Button-1>', handler)
         self.make_button('Done', action=lambda event: self.controller.done())
+
         if table.has_any_active_orders():
             self.make_button('Create Bills', 
                 action=lambda event: self.controller.make_bills(self.printer_window),
                 location=BUTTON_BOTTOM_LEFT)
+
+
+    def create_billing_ui(self, table):
+        self.canvas.delete(tk.ALL)
+
+        self.make_button('Done', action=lambda event: self.controller.return_to_table())
+        self.make_button('Print All', action=lambda event: self.controller.print_entire_table(),
+                         location=BUTTON_BOTTOM_LEFT)
+
+
 
     def draw_table(self, table, location=None, scale=1):
         offset_x0, offset_y0 = location if location else table.location

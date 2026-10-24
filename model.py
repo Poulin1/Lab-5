@@ -48,6 +48,7 @@ class Table:
         return self.orders[seat]
 
 
+
 class Order:
 
     def __init__(self):
@@ -76,25 +77,28 @@ class Order:
 
 
 class OrderItem:
-
-    # TODO: need to represent item state, not just 'ordered', all methods will need modifying
     def __init__(self, menu_item):
         self.details = menu_item
-        self.ordered = False
+        self.status = 'requested'
 
     def mark_as_ordered(self):
-        self.ordered = True
+        self.status = 'ordered'
+
+    def mark_as_served(self):
+        self.status = 'served'
+
+    def mark_as_billed(self):
+        self.status = 'billed'
 
     def has_been_ordered(self):
-        return self.ordered
+        return self.status in ['ordered', 'served', 'billed']
 
     def has_been_served(self):
-        # TODO: correct implementation based on item state
-        return False
+        return self.status in ['served', 'billed']
 
     def can_be_cancelled(self):
-        # TODO: correct implementation based on item state
-        return True
+        return self.status == 'requested'
+
 
 
 class MenuItem:
