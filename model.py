@@ -40,6 +40,33 @@ class Table:
                 if item.has_been_ordered() and not item.has_been_served():
                     return True
         return False
+    def has_unbilled_items(self):
+        for order in self.orders:
+            for item in order.items:
+                if item.status != 'billed':
+                    return True
+        return False
+    def has_billed_items(self):
+        for order in self.orders:
+            for item in order.items:
+                if item.status == 'billed':
+                    return True
+        return False
+
+    def revert_billing(self):
+        for order in self.orders:
+            for item in order.items:
+                if item.status == 'billed':
+                    item.status = 'ordered'
+    def marked_as_printed(self):
+        for order in self.orders:
+            for item in order.items:
+                if item.status == 'printed':
+                    return True
+        return False
+    def clear_orders(self):
+        self.orders=[Order() for _ in range(self.n_seats)]
+
 
     def has_order_for(self, seat):
         return bool(self.orders[seat].items)
@@ -89,9 +116,11 @@ class OrderItem:
 
     def mark_as_billed(self):
         self.status = 'billed'
+    def mark_as_printed(self):
+        self.status = 'printed'
 
     def has_been_ordered(self):
-        return self.status in ['ordered', 'served', 'billed']
+        return self.status in ['ordered', 'served', 'billed', 'printed']
 
     def has_been_served(self):
         return self.status in ['served', 'billed']

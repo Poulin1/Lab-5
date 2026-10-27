@@ -37,7 +37,6 @@ class TableController(Controller):
 
     def seat_touched(self, seat_number):
         self.view.set_controller(OrderController(self.view, self.restaurant, self.table, seat_number))
-
         self.view.update()
 
     def make_bills(self, printer):
@@ -61,50 +60,81 @@ class OrderController(Controller):
     def add_item(self, menu_item):
         self.order.add_item(menu_item)
         self.restaurant.notify_views()
+        self.view.update()
 
     def remove(self, order_item):
         self.order.remove_item(order_item)
         self.restaurant.notify_views()
+        self.view.update()
 
     def update_order(self):
         self.order.place_new_orders()
         self.view.set_controller(TableController(self.view, self.restaurant, self.table))
         self.restaurant.notify_views()
+        self.view.update()
+
 
     def cancel_changes(self):
         self.order.remove_unordered_items()
         self.view.set_controller(TableController(self.view, self.restaurant, self.table))
         self.restaurant.notify_views()
+        self.view.update()
 
 class BillingController(Controller):
-    def __init__(self, view, restaurant,table, printer):
+    def __init__(self, view, restaurant,table,printer, combine=False, counter=0):
         super().__init__(view, restaurant)
         self.table = table
-        self.printer=printer
+        self.printer = printer
+        self.combine = combine
+        self.counter = counter
+
 
 
     def create_ui(self):
         self.view.create_billing_ui(self.table)
 
+    def seat_touched(self, seat_number):
+        order = self.table.order_for(seat_number)
+        unbilled_items = [item for item in order.items if item.status != 'billed']
 
-    def print_entire_table(self):
+        if unbilled_items:
+            table_idx = self.restaurant.tables.index(self.table)
+            self.printer.print(f'--- Table {table_idx}, Seat {seat_number} ---')
 
-        table_total = 0 #total cost for each table
-        items_billed = False
+            seat_total = 0
+            for item in unbilled_items:
+                self.printer.print(f'{item.details.name:<20} ${item.details.price:>5.2f}')
+                seat_total += item.details.price
+                item.mark_as_billed()
+
+            self.printer.print('-' * 28)
+            self.printer.print(f'{"Total:":<20} ${seat_total:>5.2f}')
+            self.printer.print('============================\n')
+
+
+            self.view.update()
+
+    def finished_billing(self):
+        self.printer.clear()
+        self.table.clear_orders()
+        self.view.set_controller(RestaurantController(self.view, self.restaurant))
+        self.view.update()
+    def print_billing(self):
+        table_total = 0
+
         self.printer.print(f'== Combined Bill: Table {self.restaurant.tables.index(self.table)} ==')
-            # Loop through every seat at the table
+
         for seat_number in range(self.table.n_seats):
             order = self.table.order_for(seat_number)
             unbilled_items = [item for item in order.items if item.status != 'billed']
             if unbilled_items:
-                items_billed = True
                 self.printer.print(f'-- Seat {seat_number} --')
                 for item in unbilled_items:
                     self.printer.print(f'{item.details.name:<20} ${item.details.price:>5.2f}')
                     table_total += item.details.price
                     item.mark_as_billed()
-                # Only print the total if there were actually items to bill
-        if items_billed:
+
+        if not self.table.has_unbilled_items():
             self.printer.print('-' * 28)
             self.printer.print(f'{"Table Total:":<20} ${table_total:>5.2f}')
             self.printer.print('============================\n')
@@ -112,7 +142,18 @@ class BillingController(Controller):
             self.printer.print('No unbilled items remaining.')
             self.printer.print('============================\n')
 
+
             self.view.update()
+
+    def cancel_bills(self):
+        table_idx = self.restaurant.tables.index(self.table)
+        self.printer.print(f'--- Table {table_idx} ---')
+        self.printer.print("Cancelling Bills")
+        self.printer.print("Item status reverted to 'ordered'")
+        # Revert the data states in the model
+        self.table.revert_billing()
+        self.view.update()
+        self.return_to_table()
 
     def return_to_table(self):
         self.view.set_controller(TableController(self.view, self.restaurant, self.table))

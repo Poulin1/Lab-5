@@ -86,14 +86,29 @@ class ServerView(RestaurantView):
                 action=lambda event: self.controller.make_bills(self.printer_window),
                 location=BUTTON_BOTTOM_LEFT)
 
-
     def create_billing_ui(self, table):
         self.canvas.delete(tk.ALL)
+        table_id, seat_ids = self.draw_table(table, location=SINGLE_TABLE_LOCATION)
 
-        self.make_button('Done', action=lambda event: self.controller.return_to_table())
-        self.make_button('Print All', action=lambda event: self.controller.print_entire_table(),
+        for ix, seat_id in enumerate(seat_ids):
+            def handler(_, seat_number=ix):
+                self.controller.seat_touched(seat_number)
+            self.canvas.tag_bind(seat_id, '<Button-1>', handler)
+
+
+        self.make_button('Print All', action=lambda event: self.controller.print_billing() ,
                          location=BUTTON_BOTTOM_LEFT)
-
+        if table.has_billed_items() and not table.marked_as_printed():
+            self.make_button('Cancel Billing',
+                             action=lambda event: self.controller.cancel_bills(),
+                             location=(BUTTON_BOTTOM_LEFT[0] + BUTTON_SIZE[0] + 10, BUTTON_BOTTOM_LEFT[1]))
+        # Check if all items are billed. If yes, show Done. If no, show Back.
+        if not table.has_unbilled_items():
+            self.make_button('Done', action=lambda event: self.controller.finished_billing(),
+                             location=BUTTON_BOTTOM_RIGHT)
+        else:
+            self.make_button('Back to Table', action=lambda event: self.controller.return_to_table(),
+                             location=BUTTON_BOTTOM_RIGHT)
 
 
     def draw_table(self, table, location=None, scale=1):
@@ -162,6 +177,15 @@ class Printer(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.grid()
+        # Clear button at top
+        top_frame = tk.Frame(self)
+        top_frame.grid(row=0, column=0, columnspan=2, sticky="ew")
+        #Tried to create a button to clear the damn printer view FAIL
+        tk.Button(
+            top_frame,
+            text="Clear Tape",
+            command=self.clear
+        ).pack(fill="x")
         scrollbar = tk.Scrollbar(self)
         scrollbar.grid(row=0, column=1, sticky=tk.N + tk.S)
         self.tape = tk.Text(self, wrap=None, bd=0, yscrollcommand=scrollbar.set,
@@ -169,6 +193,9 @@ class Printer(tk.Frame):
                             width=TAPE_WIDTH, height=VISIBLE_LINES)
         self.tape.grid(row=0, column=0, sticky=tk.N + tk.S + tk.E + tk.W)
         scrollbar.config(command=self.tape.yview)
+        self.grid_columnconfigure(0, weight=1)
+
+
 
     def print(self, text):
         self.tape['state'] = tk.NORMAL
@@ -176,6 +203,13 @@ class Printer(tk.Frame):
         self.tape.insert(tk.END, '\n')
         self.tape['state'] = tk.DISABLED
         self.tape.see(tk.END)
+    #Somehow this clear does not work
+    def clear(self):
+        self.tape['state'] = tk.NORMAL
+        self.tape.delete('1.0', tk.END)  # Deletes all text from line 1 to the end
+        self.tape['state'] = tk.DISABLED
+        self.tape.update()
+
 
 
 def scale_and_offset(x0, y0, width, height, offset_x0, offset_y0, scale):
