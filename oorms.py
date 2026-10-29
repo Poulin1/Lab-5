@@ -92,9 +92,11 @@ class ServerView(RestaurantView):
 
         for ix, seat_id in enumerate(seat_ids):
             def handler(_, seat_number=ix):
-                self.controller.seat_touched(seat_number)
+                self.controller.seat_bill(seat_number)
             self.canvas.tag_bind(seat_id, '<Button-1>', handler)
 
+        self.make_button('Combine Bills', action=lambda event: self.controller.make_combine() ,
+                         location=(BUTTON_BOTTOM_LEFT[0] + BUTTON_SIZE[0] + 10, BUTTON_BOTTOM_LEFT[1]))
 
         self.make_button('Print All', action=lambda event: self.controller.print_billing() ,
                          location=BUTTON_BOTTOM_LEFT)
@@ -110,6 +112,19 @@ class ServerView(RestaurantView):
             self.make_button('Back to Table', action=lambda event: self.controller.return_to_table(),
                              location=BUTTON_BOTTOM_RIGHT)
 
+    def create_combining_ui(self, table):
+        self.canvas.delete(tk.ALL)
+        table_id, seat_ids = self.draw_table(table, location=SINGLE_TABLE_LOCATION)
+
+        for ix, seat_id in enumerate(seat_ids):
+            def handler(_, seat_number=ix):
+                self.controller.combine_seat_touch(seat_number)
+            self.canvas.tag_bind(seat_id, '<Button-1>', handler)
+
+        self.make_button('Done combining', action=lambda event: self.controller.combine_orders(),
+                         location=BUTTON_BOTTOM_LEFT)
+        self.make_button('Back to Table', action=lambda event: self.controller.cancel_combining(),
+                         location=BUTTON_BOTTOM_RIGHT)
 
     def draw_table(self, table, location=None, scale=1):
         offset_x0, offset_y0 = location if location else table.location

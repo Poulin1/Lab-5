@@ -67,7 +67,6 @@ class Table:
     def clear_orders(self):
         self.orders=[Order() for _ in range(self.n_seats)]
 
-
     def has_order_for(self, seat):
         return bool(self.orders[seat].items)
 

@@ -73,7 +73,6 @@ class OrderController(Controller):
         self.restaurant.notify_views()
         self.view.update()
 
-
     def cancel_changes(self):
         self.order.remove_unordered_items()
         self.view.set_controller(TableController(self.view, self.restaurant, self.table))
@@ -81,17 +80,19 @@ class OrderController(Controller):
         self.view.update()
 
 class BillingController(Controller):
-    def __init__(self, view, restaurant,table,printer, combine=False, counter=0):
+    def __init__(self, view, restaurant,table,printer):
         super().__init__(view, restaurant)
         self.table = table
         self.printer = printer
-        self.combine = combine
-        self.counter = counter
 
     def create_ui(self):
         self.view.create_billing_ui(self.table)
 
-    def seat_touched(self, seat_number):
+    def make_combine(self):
+        self.view.set_controller(CombiningController(self.view, self.restaurant, self.table))
+        self.view.update()
+
+    def seat_bill(self, seat_number):
         order = self.table.order_for(seat_number)
         unbilled_items = [item for item in order.items if item.status != 'billed']
 
@@ -154,3 +155,33 @@ class BillingController(Controller):
         self.view.set_controller(TableController(self.view, self.restaurant, self.table))
         self.view.update()
 
+
+class CombiningController(Controller):
+    def __init__(self, view, restaurant,table):
+        super().__init__(view, restaurant)
+        self.table = table
+        self.combined_seats = []
+
+    def create_ui(self):
+        self.view.create_combining_ui(self.table)
+
+    def combine_orders(self):
+        paying_seat = self.combined_seats.pop(0)
+        paying_seat_order = self.table.order_for(paying_seat)
+
+        for seat in self.combined_seats:
+            order = self.table.order_for(seat)
+            for item in list(order.items):
+                paying_seat_order.add_item(item)
+                order.remove_item(item)
+
+        self.combined_seats.clear()
+        self.view.set_controller(TableController(self.view, self.restaurant, self.table))
+        self.view.update()
+
+
+    def cancel_combining(self):
+        pass
+
+    def combine_seat_touch(self,seat_number):
+        self.combined_seats.append(seat_number)
