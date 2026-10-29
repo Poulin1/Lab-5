@@ -98,7 +98,7 @@ class ServerView(RestaurantView):
 
         self.make_button('Print All', action=lambda event: self.controller.print_billing() ,
                          location=BUTTON_BOTTOM_LEFT)
-        if table.has_billed_items() and not table.marked_as_printed():
+        if table.has_billed_items():
             self.make_button('Cancel Billing',
                              action=lambda event: self.controller.cancel_bills(),
                              location=(BUTTON_BOTTOM_LEFT[0] + BUTTON_SIZE[0] + 10, BUTTON_BOTTOM_LEFT[1]))

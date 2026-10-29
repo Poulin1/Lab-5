@@ -88,8 +88,6 @@ class BillingController(Controller):
         self.combine = combine
         self.counter = counter
 
-
-
     def create_ui(self):
         self.view.create_billing_ui(self.table)
 
@@ -105,13 +103,10 @@ class BillingController(Controller):
             for item in unbilled_items:
                 self.printer.print(f'{item.details.name:<20} ${item.details.price:>5.2f}')
                 seat_total += item.details.price
-                item.mark_as_billed()
 
             self.printer.print('-' * 28)
             self.printer.print(f'{"Total:":<20} ${seat_total:>5.2f}')
             self.printer.print('============================\n')
-
-
             self.view.update()
 
     def finished_billing(self):
@@ -119,6 +114,7 @@ class BillingController(Controller):
         self.table.clear_orders()
         self.view.set_controller(RestaurantController(self.view, self.restaurant))
         self.view.update()
+
     def print_billing(self):
         table_total = 0
 
@@ -142,8 +138,7 @@ class BillingController(Controller):
             self.printer.print('No unbilled items remaining.')
             self.printer.print('============================\n')
 
-
-            self.view.update()
+        self.view.update()
 
     def cancel_bills(self):
         table_idx = self.restaurant.tables.index(self.table)
@@ -158,3 +153,4 @@ class BillingController(Controller):
     def return_to_table(self):
         self.view.set_controller(TableController(self.view, self.restaurant, self.table))
         self.view.update()
+
