@@ -142,6 +142,7 @@ class BillingController(Controller):
         self.view.update()
 
     def cancel_bills(self):
+        self.printer.clear()
         table_idx = self.restaurant.tables.index(self.table)
         self.printer.print(f'--- Table {table_idx} ---')
         self.printer.print("Cancelling Bills")
@@ -155,7 +156,13 @@ class BillingController(Controller):
         self.view.set_controller(TableController(self.view, self.restaurant, self.table))
         self.view.update()
 
-
+"""
+Combining controller sequence: 
+1. Click combine orders
+2. Click seats user wants to combine
+3. The first seat clicked is the paying seat (all the other seat orders will go into that first seat) 
+4. Press Done combining and the orders have been combined!
+"""
 class CombiningController(Controller):
     def __init__(self, view, restaurant,table):
         super().__init__(view, restaurant)
@@ -172,16 +179,12 @@ class CombiningController(Controller):
         for seat in self.combined_seats:
             order = self.table.order_for(seat)
             for item in list(order.items):
-                paying_seat_order.add_item(item)
+                paying_seat_order.add_item(item.details)# item.details ensures we get the price and name of each item and we add it to the paying seat order
                 order.remove_item(item)
-
         self.combined_seats.clear()
         self.view.set_controller(TableController(self.view, self.restaurant, self.table))
         self.view.update()
 
-
-    def cancel_combining(self):
-        pass
 
     def combine_seat_touch(self,seat_number):
         self.combined_seats.append(seat_number)

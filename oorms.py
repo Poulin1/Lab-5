@@ -94,16 +94,19 @@ class ServerView(RestaurantView):
             def handler(_, seat_number=ix):
                 self.controller.seat_bill(seat_number)
             self.canvas.tag_bind(seat_id, '<Button-1>', handler)
+        if table.has_unbilled_items(): # To make sure the combine bills button only appears before billed items print
+            self.make_button('Combine Bills', action=lambda event: self.controller.make_combine() ,
+                            location=(BUTTON_BOTTOM_LEFT[0] , BUTTON_BOTTOM_LEFT[1] + BUTTON_SIZE[1]-65))
 
-        self.make_button('Combine Bills', action=lambda event: self.controller.make_combine() ,
-                         location=(BUTTON_BOTTOM_LEFT[0] + BUTTON_SIZE[0] + 10, BUTTON_BOTTOM_LEFT[1]))
-
-        self.make_button('Print All', action=lambda event: self.controller.print_billing() ,
+        self.make_button('Print All', action=lambda event: self.controller.print_billing() ,# items printer= billed
                          location=BUTTON_BOTTOM_LEFT)
         if table.has_billed_items():
+
             self.make_button('Cancel Billing',
                              action=lambda event: self.controller.cancel_bills(),
-                             location=(BUTTON_BOTTOM_LEFT[0] + BUTTON_SIZE[0] + 10, BUTTON_BOTTOM_LEFT[1]))
+                             location=(BUTTON_BOTTOM_LEFT[0] + BUTTON_SIZE[0] + 30, BUTTON_BOTTOM_LEFT[1] + BUTTON_SIZE[1]-30))
+
+
         # Check if all items are billed. If yes, show Done. If no, show Back.
         if not table.has_unbilled_items():
             self.make_button('Done', action=lambda event: self.controller.finished_billing(),

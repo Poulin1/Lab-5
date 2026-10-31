@@ -17,7 +17,8 @@ precondition: seat activated when Atleast one item ordered for a seat
 Main Flow:
 1.   Seat activated = Create bill for table and section for selected seat with ordered items
 2.   Constantly update total price
-3.
+3. Mark billed and Cancel button once print all
+4. Click on seat ordered
 
 Alternative Flows:
 1. If not ordered item on selected seat create bills will not work
@@ -25,6 +26,8 @@ Alternative Flows:
 PostConditions:
 1. Print all button in tidy format
 2. Save orders to a bill register(log)
+
+Combining orders:
 
 
 
